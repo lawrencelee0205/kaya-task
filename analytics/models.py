@@ -17,10 +17,13 @@ class AdGroup(models.Model):
 
 
 class AdGroupStatsMetricMixin(models.Model):
-    impressions = models.PositiveIntegerField()
-    clicks = models.PositiveIntegerField()
-    converstions = models.FloatField()
-    cost = models.FloatField()
+    impressions = models.PositiveIntegerField(default=0)
+    clicks = models.PositiveIntegerField(default=0)
+    converstions = models.FloatField(default=0)
+    cost = models.FloatField(default=0)
+
+    class Meta:
+        abstract = True
 
 
 class AdGroupStats(AdGroupStatsMetricMixin):
