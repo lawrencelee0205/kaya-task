@@ -10,9 +10,10 @@ from django.db.models import (
     Count,
     FloatField,
     Sum,
-    ExpressionWrapper,
     Avg,
     F,
+    Case,
+    When,
 )
 
 
@@ -39,10 +40,11 @@ def campaign_list(request):
             total_conversion=Sum("conversions"),
         )
         .annotate(
-            average_cost_per_conversion=ExpressionWrapper(
-                F("total_cost") / F("total_conversion"),
+            average_cost_per_conversion=Case(
+                When(total_conversion=0, then=0),
+                default=F("total_cost") / F("total_conversion"),
                 output_field=FloatField(),
-            ),
+            )
         )
         .values("average_cost_per_conversion")
     )
