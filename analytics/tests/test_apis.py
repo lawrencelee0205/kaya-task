@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from .factories import AdGroupStatsFactory
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from parameterized import parameterized
 
 
 class TestCampaignList(APITestCase):
@@ -46,3 +47,19 @@ class TestCampaignList(APITestCase):
 
         target_campaign.refresh_from_db()
         assert target_campaign.name != update_name
+
+
+class TestPerformanceTimeSeries(APITestCase):
+    def setUp(self):
+        super().setUp()
+        AdGroupStatsFactory.create_batch(5)
+
+    @parameterized.expand(
+        [("day"), ("week"), ("month")],
+    )
+    def test_get_performance_time_series(self, aggregate_by):
+        url = reverse("performance-time-series") + "?" + f"aggregate_by={aggregate_by}"
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_200_OK
