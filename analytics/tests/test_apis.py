@@ -9,7 +9,7 @@ class TestCampaignList(APITestCase):
         AdGroupStatsFactory.create_batch(10)
 
     def test_campaign_list(self):
-        url = reverse("campaign_list")
+        url = reverse("campaigns")
         response = self.client.get(url)
         assert response.status_code == 200
         assert len(response.data) == 10

@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Campaign, AdGroupStats
 from .serializers import CampaignSerializer
+from django.shortcuts import get_object_or_404
 from django.db.models.functions import TruncMonth
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import (
@@ -17,8 +18,15 @@ from django.db.models import (
 )
 
 
-@api_view(["GET"])
-def campaign_list(request):
+@api_view(["GET", "POST"])
+def campaigns(request):
+    if request.method == "POST":
+        campaign = get_object_or_404(Campaign, id=request.data["id"])
+        serializer = CampaignSerializer(campaign, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
     average_monthly_cost_subquery = (
         AdGroupStats.objects.filter(ad_group__campaign_id=OuterRef("id"))
         .annotate(
