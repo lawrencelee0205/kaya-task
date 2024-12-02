@@ -24,14 +24,18 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v1
 
-            - name: Build and run tests
+            - name: Build image and run containers
               run: |
-                docker compose up --build --abort-on-container-exit
+                docker compose up --build -d
 
-            - name: Run migrations (if needed)
+            - name: Run migrations
               run: |
                 docker compose run app python manage.py migrate --noinput
 
             - name: Run tests
               run: |
                 docker compose run app pytest .
+
+            - name: Stop and remove containers
+              if: success() || failure()
+              run: docker compose down
