@@ -15,7 +15,7 @@ class TestCampaignList(APITestCase):
         url = reverse("campaigns")
         response = self.client.get(url)
         assert response.status_code == HTTP_200_OK
-        assert len(response.data) == 10
+        assert len(response.data.get("results")) == 10
 
     def test_update_campaign_name(self):
         target_campaign = Campaign.objects.first()
