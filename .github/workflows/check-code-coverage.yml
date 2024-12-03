@@ -54,18 +54,24 @@ jobs:
       - name: Copy Coverage Report
         run: |
           docker compose cp app:/code/coverage.xml ./coverage.xml
-          docker compose down
 
       - name: Generate Coverage Summary
         id: coverage_summary
         run: |
           echo "## Code Coverage Summary" > coverage_summary.md
-          coverage report -m >> coverage_summary.md || true
+          docker compose exec app coverage report -m >> coverage_summary.md || true
+          docker compose cp app:/code/coverage_summary.md ./coverage_summary.md
+
+      - name: Read Coverage Summary into Variable
+        id: read_summary
+        run: |
+          echo "COVERAGE_SUMMARY<<EOF" >> $GITHUB_ENV
+          cat coverage_summary.md >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Update PR Comment with Coverage Results
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            $(cat coverage_summary.md)  # Use the generated markdown summary as the comment body.
+          body: ${{env.COVERAGE_SUMMARY}}
           token: ${{ secrets.GITHUB_TOKEN }}
