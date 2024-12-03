@@ -2,6 +2,7 @@ from datetime import timedelta
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.pagination import LimitOffsetPagination
 from .models import Campaign, AdGroupStats
 from .serializers import (
     CampaignSerializer,
@@ -78,6 +79,13 @@ def campaigns(request):
         "average_monthly_cost",
         "average_cost_per_conversion",
     )
+    paginator = LimitOffsetPagination()
+    page = paginator.paginate_queryset(campaigns, request)
+
+    if page is not None:
+        serializer = CampaignSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
     serializer = CampaignSerializer(campaigns, many=True)
     return Response(serializer.data)
 
@@ -153,6 +161,13 @@ def performance_time_series(request):
             "average_conversion_rate",
         )
     )
+    paginator = LimitOffsetPagination()
+    page = paginator.paginate_queryset(ad_group_stats, request)
+
+    if page is not None:
+        serializer = PerformanceTimeSeriesMetricSerializer(data=page, many=True)
+        serializer.is_valid()
+        return paginator.get_paginated_response(data=serializer.data)
 
     serializer = PerformanceTimeSeriesMetricSerializer(data=ad_group_stats, many=True)
     serializer.is_valid()

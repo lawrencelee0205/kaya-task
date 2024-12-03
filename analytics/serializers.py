@@ -44,14 +44,14 @@ class PerformanceTimeSeriesQuerySerializer(serializers.Serializer):
 
 
 class PerformanceTimeSeriesMetricSerializer(serializers.Serializer):
-    campaign_id = serializers.IntegerField(read_only=True)
-    total_cost = serializers.FloatField(read_only=True)
-    total_conversions = serializers.FloatField(read_only=True)
-    total_clicks = serializers.IntegerField(read_only=True)
-    average_cost_per_click = serializers.FloatField(read_only=True)
-    average_cost_per_conversion = serializers.FloatField(read_only=True)
-    average_click_through_rate = serializers.FloatField(read_only=True)
-    average_conversion_rate = serializers.FloatField(read_only=True)
+    campaign_id = serializers.IntegerField()
+    total_cost = serializers.FloatField()
+    total_conversions = serializers.FloatField()
+    total_clicks = serializers.IntegerField()
+    average_cost_per_click = serializers.FloatField()
+    average_cost_per_conversion = serializers.FloatField()
+    average_click_through_rate = serializers.FloatField()
+    average_conversion_rate = serializers.FloatField()
 
 
 class PerformanceQuerySerializer(serializers.Serializer):
