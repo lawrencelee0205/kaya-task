@@ -53,8 +53,8 @@ jobs:
 
       - name: Copy Coverage Report
         run: |
-          docker cp app:/code/coverage.xml ./coverage.xml
-          docker rm app
+          docker compose cp app:/code/coverage.xml ./coverage.xml
+          docker compose down
 
       - name: Generate Coverage Summary
         id: coverage_summary
