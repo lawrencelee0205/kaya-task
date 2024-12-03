@@ -47,16 +47,17 @@ jobs:
             exit 1
           fi
 
-      - name: Set up Docker
+      - name: Build coverage file
         run: |
-          docker compose run app pytest --cov --cov-report=xml:/code/coverage.xml
+          docker compose run app pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered | tee pytest-coverage.txt
 
       - name: Copy Coverage Report
         run: |
-          docker compose cp app:/code/coverage.xml ./clover.xml
+          docker compose cp app:/code/pytest.xml ./pytest.xml
+          docker compose cp app:/code/pytest-coverage.txt ./pytest-coverage.txt
 
-      - name: Copy Coverage Report
-        uses: kcjpop/coverage-comments@v2.2
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          coverage-file: './clover.xml'
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
