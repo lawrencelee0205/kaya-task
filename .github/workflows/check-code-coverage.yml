@@ -1,15 +1,13 @@
-name: test-run
+name: Code Coverage
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
+    types: [opened, synchronize]
 
 jobs:
-  test:
+  coverage:
     runs-on: ubuntu-latest
     services:
       db:
@@ -49,14 +47,25 @@ jobs:
             exit 1
           fi
 
-      - name: Run migrations
+      - name: Set up Docker
         run: |
-          docker compose run app python manage.py migrate --noinput
+          docker compose run app pytest --cov --cov-report=xml:/code/coverage.xml
 
-      - name: Run tests
+      - name: Copy Coverage Report
         run: |
-          docker compose run app pytest .
+          docker cp app:/code/coverage.xml ./coverage.xml
+          docker rm app
 
-      - name: Stop and remove containers
-        if: success() || failure()
-        run: docker compose down
+      - name: Generate Coverage Summary
+        id: coverage_summary
+        run: |
+          echo "## Code Coverage Summary" > coverage_summary.md
+          coverage report -m >> coverage_summary.md || true
+
+      - name: Update PR Comment with Coverage Results
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            $(cat coverage_summary.md)  # Use the generated markdown summary as the comment body.
+          token: ${{ secrets.GITHUB_TOKEN }}
