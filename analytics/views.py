@@ -1,10 +1,13 @@
+from datetime import timedelta
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from .models import Campaign, AdGroupStats
 from .serializers import (
     CampaignSerializer,
+    PerformanceMetricSerializer,
     PerformanceTimeSeriesQuerySerializer,
+    PerformanceQuerySerializer,
     PerformanceTimeSeriesMetricSerializer,
 )
 from django.shortcuts import get_object_or_404
@@ -153,4 +156,100 @@ def performance_time_series(request):
 
     serializer = PerformanceTimeSeriesMetricSerializer(data=ad_group_stats, many=True)
     serializer.is_valid()
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+def performances(request):
+    serializer = PerformanceQuerySerializer(data=request.query_params)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+    start_date = serializer.validated_data.get("start_date")
+    end_date = serializer.validated_data.get("end_date")
+    compare_mode = serializer.validated_data.get("compare_mode")
+    date_delta = end_date - start_date
+
+    if compare_mode == "preceding":
+        compared_end_date = start_date - timedelta(days=1)
+        compared_start_date = compared_end_date - timedelta(days=date_delta.days)
+    elif compare_mode == "previous_month":
+        compared_end_date = end_date - timedelta(months=1)
+        compared_start_date = start_date - timedelta(months=1)
+
+    base_performance = AdGroupStats.objects.filter(
+        date__range=(start_date, end_date)
+    ).aggregate(
+        base_total_cost=Sum("cost"),
+        base_total_clicks=Sum("clicks"),
+        base_total_conversions=Sum("conversions"),
+        base_total_impressions=Sum("impressions"),
+        base_cost_per_conversion=Case(
+            When(base_total_conversions=0, then=0),
+            default=F("base_total_cost") / F("base_total_conversions"),
+            output_field=FloatField(),
+        ),
+        base_cost_per_click=Case(
+            When(base_total_clicks=0, then=0),
+            default=F("base_total_cost") / F("base_total_clicks"),
+            output_field=FloatField(),
+        ),
+        base_cost_per_mile_impression=Case(
+            When(base_total_impressions=0, then=0),
+            default=F("base_total_cost") / F("base_total_impressions") * 1000,
+            output_field=FloatField(),
+        ),
+        base_conversion_rate=Case(
+            When(base_total_clicks=0, then=0),
+            default=F("base_total_conversions") / F("base_total_clicks"),
+            output_field=FloatField(),
+        ),
+        base_click_through_rate=Case(
+            When(base_total_impressions=0, then=0),
+            default=F("base_total_clicks") / F("base_total_impressions"),
+            output_field=FloatField(),
+        ),
+    )
+
+    compared_performance = AdGroupStats.objects.filter(
+        date__range=(compared_start_date, compared_end_date)
+    ).aggregate(
+        compared_total_cost=Sum("cost"),
+        compared_total_clicks=Sum("clicks"),
+        compared_total_conversions=Sum("conversions"),
+        compared_total_impressions=Sum("impressions"),
+        compared_cost_per_conversion=Case(
+            When(compared_total_conversions=0, then=0),
+            default=F("compared_total_cost") / F("compared_total_conversions"),
+            output_field=FloatField(),
+        ),
+        compared_cost_per_click=Case(
+            When(compared_total_clicks=0, then=0),
+            default=F("compared_total_cost") / F("compared_total_clicks"),
+            output_field=FloatField(),
+        ),
+        compared_cost_per_mile_impression=Case(
+            When(compared_total_impressions=0, then=0),
+            default=F("compared_total_cost") / F("compared_total_impressions") * 1000,
+            output_field=FloatField(),
+        ),
+        compared_conversion_rate=Case(
+            When(compared_total_clicks=0, then=0),
+            default=F("compared_total_conversions") / F("compared_total_clicks"),
+            output_field=FloatField(),
+        ),
+        compared_click_through_rate=Case(
+            When(compared_total_impressions=0, then=0),
+            default=F("compared_total_clicks") / F("compared_total_impressions"),
+            output_field=FloatField(),
+        ),
+    )
+
+    base_performance.pop("base_total_impressions")
+    compared_performance.pop("compared_total_impressions")
+    serializer = PerformanceMetricSerializer(
+        data={**base_performance, **compared_performance}
+    )
+    serializer.is_valid()
+
     return Response(serializer.data)

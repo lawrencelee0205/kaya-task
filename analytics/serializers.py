@@ -52,3 +52,31 @@ class PerformanceTimeSeriesMetricSerializer(serializers.Serializer):
     average_cost_per_conversion = serializers.FloatField(read_only=True)
     average_click_through_rate = serializers.FloatField(read_only=True)
     average_conversion_rate = serializers.FloatField(read_only=True)
+
+
+class PerformanceQuerySerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    compare_mode = serializers.ChoiceField(
+        choices=[("preceding", "preceding"), ("previous_month", "previous_month")]
+    )
+
+
+class PerformanceMetricSerializer(serializers.Serializer):
+    base_total_cost = serializers.FloatField()
+    base_total_clicks = serializers.IntegerField()
+    base_total_conversions = serializers.FloatField()
+    base_cost_per_conversion = serializers.FloatField()
+    base_cost_per_click = serializers.FloatField()
+    base_cost_per_mile_impression = serializers.FloatField()
+    base_conversion_rate = serializers.FloatField()
+    base_click_through_rate = serializers.FloatField()
+
+    compared_total_cost = serializers.FloatField()
+    compared_total_clicks = serializers.IntegerField()
+    compared_total_conversions = serializers.FloatField()
+    compared_cost_per_conversion = serializers.FloatField()
+    compared_cost_per_click = serializers.FloatField()
+    compared_cost_per_mile_impression = serializers.FloatField()
+    compared_conversion_rate = serializers.FloatField()
+    compared_click_through_rate = serializers.FloatField()

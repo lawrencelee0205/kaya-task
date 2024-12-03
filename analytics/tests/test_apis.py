@@ -63,3 +63,23 @@ class TestPerformanceTimeSeries(APITestCase):
             url,
         )
         assert response.status_code == HTTP_200_OK
+
+
+class TestPerformance(APITestCase):
+    def setUp(self):
+        super().setUp()
+        AdGroupStatsFactory.create_batch(5)
+
+    def test_get_performance(self):
+        start_date = "2022-01-01"
+        end_date = "2022-01-31"
+        compare_mode = "preceding"
+        url = (
+            reverse("performances")
+            + "?"
+            + f"start_date={start_date}&end_date={end_date}&compare_mode={compare_mode}"
+        )
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_200_OK

@@ -13,7 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         services:
             db:
-                image: postgres:16-alpine
+                image: postgres:14-alpine
                 env:
                     POSTGRES_HOST_AUTH_METHOD: trust
                     ports: 5432:5432
@@ -27,6 +27,27 @@ jobs:
             - name: Build image and run containers
               run: |
                 docker compose up --build -d
+
+            - name: Wait for PostgreSQL to be ready
+              run: |
+                TIMEOUT=60
+                INTERVAL=2
+                ELAPSED=0
+
+                while [ $ELAPSED -lt $TIMEOUT ]; do
+                  if docker compose exec db pg_isready; then
+                    echo "PostgreSQL is ready!"
+                    break
+                  fi
+                  echo "Waiting for PostgreSQL..."
+                  sleep $INTERVAL
+                  ELAPSED=$((ELAPSED + INTERVAL))
+                done
+
+                if [ $ELAPSED -ge $TIMEOUT ]; then
+                  echo "PostgreSQL did not become ready within the timeout period."
+                  exit 1
+                fi
 
             - name: Run migrations
               run: |
