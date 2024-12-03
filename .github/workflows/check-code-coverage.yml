@@ -59,14 +59,14 @@ jobs:
         id: coverage_summary
         run: |
           echo "## Code Coverage Summary" > coverage_summary.md
-          docker compose exec app coverage report -m >> coverage_summary.md || true
-          docker compose cp app:/code/coverage_summary.md ./coverage_summary.md
+          docker compose exec app coverage report -m >> coverage_summary.txt || true
+          docker compose cp app:/code/coverage_summary.txt ./coverage_summary.txt
 
       - name: Read Coverage Summary into Variable
         id: read_summary
         run: |
           echo "COVERAGE_SUMMARY<<EOF" >> $GITHUB_ENV
-          cat coverage_summary.md >> $GITHUB_ENV
+          cat coverage_summary.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Update PR Comment with Coverage Results
