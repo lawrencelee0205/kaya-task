@@ -13,6 +13,7 @@ pre-commit = "*"
 pytest = "*"
 pytest-django = "*"
 factory-boy = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.12"

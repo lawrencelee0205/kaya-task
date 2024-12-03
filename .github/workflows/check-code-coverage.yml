@@ -1,15 +1,13 @@
-name: test-run
+name: Code Coverage
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
+    types: [opened, synchronize]
 
 jobs:
-  test:
+  coverage:
     runs-on: ubuntu-latest
     services:
       db:
@@ -49,14 +47,17 @@ jobs:
             exit 1
           fi
 
-      - name: Run migrations
+      - name: Build coverage file
         run: |
-          docker compose run app python manage.py migrate --noinput
+          docker compose run app pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered | tee pytest-coverage.txt
 
-      - name: Run tests
+      - name: Copy Coverage Report
         run: |
-          docker compose run app pytest .
+          docker compose cp app:/code/pytest.xml ./pytest.xml
+          docker compose cp app:/code/pytest-coverage.txt ./pytest-coverage.txt
 
-      - name: Stop and remove containers
-        if: success() || failure()
-        run: docker compose down
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
