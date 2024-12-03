@@ -1,6 +1,6 @@
 from analytics.models import Campaign
 from rest_framework.test import APITestCase
-from .factories import AdGroupStatsFactory
+from .factories import AdGroupStatsFactory, TokenFactory
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from parameterized import parameterized
@@ -10,6 +10,8 @@ class TestCampaignList(APITestCase):
     def setUp(self):
         super().setUp()
         AdGroupStatsFactory.create_batch(10)
+        token = TokenFactory()
+        self.client.force_authenticate(user=token.user)
 
     def test_get_campaign_list(self):
         url = reverse("campaigns")
@@ -53,6 +55,8 @@ class TestPerformanceTimeSeries(APITestCase):
     def setUp(self):
         super().setUp()
         AdGroupStatsFactory.create_batch(5)
+        token = TokenFactory()
+        self.client.force_authenticate(user=token.user)
 
     @parameterized.expand(
         [("day"), ("week"), ("month")],
@@ -69,6 +73,8 @@ class TestPerformance(APITestCase):
     def setUp(self):
         super().setUp()
         AdGroupStatsFactory.create_batch(5)
+        token = TokenFactory()
+        self.client.force_authenticate(user=token.user)
 
     def test_get_performance(self):
         start_date = "2022-01-01"

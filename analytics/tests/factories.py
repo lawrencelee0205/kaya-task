@@ -2,6 +2,8 @@ import factory
 from factory import fuzzy
 from analytics.models import Campaign, AdGroup, AdGroupStats
 from analytics.enums import CampaignTypeChoices, AdGroupDeviceChoices
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 
 
 class CampaignFactory(factory.django.DjangoModelFactory):
@@ -33,3 +35,17 @@ class AdGroupStatsFactory(factory.django.DjangoModelFactory):
     conversions = fuzzy.FuzzyFloat(0)
     clicks = fuzzy.FuzzyInteger(0)
     impressions = fuzzy.FuzzyInteger(0)
+
+
+class UserFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = User
+
+    username = factory.Faker("user_name")
+
+
+class TokenFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Token
+
+    user = factory.SubFactory(UserFactory)

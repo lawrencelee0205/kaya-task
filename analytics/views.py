@@ -1,8 +1,14 @@
 from datetime import timedelta
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from .models import Campaign, AdGroupStats
 from .serializers import (
     CampaignSerializer,
@@ -27,6 +33,8 @@ from django.db.models import (
 )
 
 
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 @api_view(["GET", "POST"])
 def campaigns(request):
     if request.method == "POST":
@@ -90,6 +98,8 @@ def campaigns(request):
     return Response(serializer.data)
 
 
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def performance_time_series(request):
     serializer = PerformanceTimeSeriesQuerySerializer(data=request.query_params)
@@ -174,6 +184,8 @@ def performance_time_series(request):
     return Response(serializer.data)
 
 
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def performances(request):
     serializer = PerformanceQuerySerializer(data=request.query_params)
