@@ -8,5 +8,5 @@ urlpatterns = [
         views.PerformanceTimeSeriesList.as_view(),
         name="performance-time-series",
     ),
-    path("v1/performances/", views.performances, name="performances"),
+    path("v1/performances/", views.PerformanceRetrieve.as_view(), name="performances"),
 ]
