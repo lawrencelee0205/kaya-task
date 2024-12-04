@@ -6,6 +6,10 @@ services:
       context: .
     image: kaya-django-app:latest
     command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
     volumes:
       - .:/code
     ports:
