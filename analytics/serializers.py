@@ -36,15 +36,13 @@ class PerformanceTimeSeriesQuerySerializer(serializers.Serializer):
     aggregate_by = serializers.ChoiceField(
         choices=[("day", "day"), ("week", "week"), ("month", "month")]
     )
-    campaigns = serializers.ListField(
-        child=serializers.IntegerField(), read_only=True, required=False
-    )
+    campaigns = serializers.ListField(child=serializers.CharField(), required=False)
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
 
 
 class PerformanceTimeSeriesMetricSerializer(serializers.Serializer):
-    campaign_id = serializers.IntegerField()
+    campaign_id = serializers.IntegerField(required=False)
     total_cost = serializers.FloatField()
     total_conversions = serializers.FloatField()
     total_clicks = serializers.IntegerField()

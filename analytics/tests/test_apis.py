@@ -172,80 +172,74 @@ class TestPerformanceTimeSeries(APITestCase):
 
     @parameterized.expand(
         [
-            ("day", "", None, None, 300, 3, 3, 100, 100, 100, 100),
-            ("day", "", "2024-11-27", None, 300, 3, 3, 100, 100, 100, 100),
-            ("day", "", None, "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("day", "", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("day", "c1", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("day", "c2", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
             (
-                "day",
-                "c1, c2",
-                "2024-11-27",
-                "2024-12-04",
-                600,
-                6,
-                6,
-                200,
-                200,
-                200,
-                200,
+                "",
+                None,
+                None,
+                [
+                    [200, 2, 2, 100, 100, 1, 1],
+                    [200, 2, 2, 100, 100, 1, 1],
+                    [200, 2, 2, 100, 100, 1, 1],
+                ],
             ),
-            ("week", "", None, None, 300, 3, 3, 100, 100, 100, 100),
-            ("week", "", "2024-11-27", None, 300, 3, 3, 100, 100, 100, 100),
-            ("week", "", None, "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("week", "", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("week", "c1", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("week", "c2", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
             (
-                "week",
-                "c1, c2",
-                "2024-11-27",
-                "2024-12-04",
-                600,
-                6,
-                6,
-                200,
-                200,
-                200,
-                200,
+                "",
+                "2024-12-02",
+                None,
+                [
+                    [200, 2, 2, 100, 100, 1, 1],
+                    [200, 2, 2, 100, 100, 1, 1],
+                    [200, 2, 2, 100, 100, 1, 1],
+                ],
             ),
-            ("month", "", None, None, 300, 3, 3, 100, 100, 100, 100),
-            ("month", "", "2024-11-27", None, 300, 3, 3, 100, 100, 100, 100),
-            ("month", "", None, "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("month", "", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("month", "c1", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
-            ("month", "c2", "2024-11-27", "2024-12-04", 300, 3, 3, 100, 100, 100, 100),
             (
-                "month",
+                "",
+                None,
+                "2024-12-02",
+                [[200, 2, 2, 100, 100, 1, 1], [200, 2, 2, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                "2024-11-27",
+                "2024-12-03",
+                [[200, 2, 2, 100, 100, 1, 1], [200, 2, 2, 100, 100, 1, 1]],
+            ),
+            (
+                "c1",
+                "2024-11-27",
+                "2024-12-04",
+                [
+                    [100, 1, 1, 100, 100, 1, 1],
+                    [100, 1, 1, 100, 100, 1, 1],
+                    [100, 1, 1, 100, 100, 1, 1],
+                ],
+            ),
+            (
+                "c2",
+                "2024-11-27",
+                "2024-12-04",
+                [
+                    [100, 1, 1, 100, 100, 1, 1],
+                    [100, 1, 1, 100, 100, 1, 1],
+                    [100, 1, 1, 100, 100, 1, 1],
+                ],
+            ),
+            (
                 "c1, c2",
                 "2024-11-27",
                 "2024-12-04",
-                600,
-                6,
-                6,
-                200,
-                200,
-                200,
-                200,
+                [
+                    [200, 2, 2, 100, 100, 1, 1],
+                    [200, 2, 2, 100, 100, 1, 1],
+                    [200, 2, 2, 100, 100, 1, 1],
+                ],
             ),
         ]
     )
-    def test_get_performance_time_series_data(
-        self,
-        aggregate_by,
-        campaigns,
-        start_date,
-        end_date,
-        total_cost,
-        total_clicks,
-        total_conversions,
-        average_cost_per_click,
-        average_cost_per_conversion,
-        average_click_through_rate,
-        average_conversion_rate,
+    def test_get_performance_time_series_data_aggregate_by_day(
+        self, campaigns, start_date, end_date, expected_results
     ):
-        param = {"aggregate_by": aggregate_by}
+        param = {"aggregate_by": "day"}
         if campaigns != "":
             param["campaigns"] = []
         if "c1" in campaigns:
@@ -266,14 +260,175 @@ class TestPerformanceTimeSeries(APITestCase):
             url,
         )
         assert response.status_code == HTTP_200_OK
-        result = response.data.get("results")[0]
-        assert result["total_cost"] == total_cost
-        assert result["total_clicks"] == total_clicks
-        assert result["total_conversions"] == total_conversions
-        assert result["average_cost_per_click"] == average_cost_per_click
-        assert result["average_cost_per_conversion"] == average_cost_per_conversion
-        assert result["average_click_through_rate"] == average_click_through_rate
-        assert result["average_conversion_rate"] == average_conversion_rate
+        results = response.data.get("results")
+        results = [result.values() for result in results]
+        zipped_results = [list(zip(a, b)) for a, b in zip(results, expected_results)][0]
+        for response_metric, expected_metric in zipped_results:
+            assert response_metric == expected_metric
+
+    @parameterized.expand(
+        [
+            (
+                "",
+                None,
+                None,
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                "2024-11-27",
+                None,
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                None,
+                "2024-12-04",
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                "2024-11-27",
+                "2024-12-04",
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "c1",
+                "2024-11-27",
+                "2024-12-04",
+                [[100, 1, 1, 100, 100, 1, 1], [200, 2, 2, 100, 100, 1, 1]],
+            ),
+            (
+                "c2",
+                "2024-11-27",
+                "2024-12-04",
+                [[100, 1, 1, 100, 100, 1, 1], [200, 2, 2, 100, 100, 1, 1]],
+            ),
+            (
+                "c1, c2",
+                "2024-11-27",
+                "2024-12-04",
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+        ]
+    )
+    def test_get_performance_time_series_data_aggregate_by_week(
+        self,
+        campaigns,
+        start_date,
+        end_date,
+        expected_results,
+    ):
+        param = {"aggregate_by": "week"}
+        if campaigns != "":
+            param["campaigns"] = []
+        if "c1" in campaigns:
+            param["campaigns"].append(str(self.campaign_1.id))
+        if "c2" in campaigns:
+            param["campaigns"].append(str(self.campaign_2.id))
+        if "campaigns" in param:
+            param["campaigns"] = ",".join(param["campaigns"])
+
+        if start_date:
+            param["start_date"] = start_date
+        if end_date:
+            param["end_date"] = end_date
+
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_200_OK
+        results = response.data.get("results")
+        results = [result.values() for result in results]
+        zipped_results = [list(zip(a, b)) for a, b in zip(results, expected_results)][0]
+        for response_metric, expected_metric in zipped_results:
+            assert response_metric == expected_metric
+
+    @parameterized.expand(
+        [
+            (
+                "",
+                None,
+                None,
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                "2024-11-27",
+                None,
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                None,
+                "2024-12-04",
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "",
+                "2024-11-27",
+                "2024-12-04",
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+            (
+                "c1",
+                "2024-11-27",
+                "2024-12-04",
+                [[100, 1, 1, 100, 100, 1, 1], [200, 2, 2, 100, 100, 1, 1]],
+            ),
+            (
+                "c2",
+                "2024-11-27",
+                "2024-12-04",
+                [[100, 1, 1, 100, 100, 1, 1], [200, 2, 2, 100, 100, 1, 1]],
+            ),
+            (
+                "c1, c2",
+                "2024-11-27",
+                "2024-12-04",
+                [[200, 2, 2, 100, 100, 1, 1], [400, 4, 4, 100, 100, 1, 1]],
+            ),
+        ]
+    )
+    def test_get_performance_time_series_data_aggregate_by_month(
+        self,
+        campaigns,
+        start_date,
+        end_date,
+        expected_results,
+    ):
+        param = {"aggregate_by": "month"}
+        if campaigns != "":
+            param["campaigns"] = []
+        if "c1" in campaigns:
+            param["campaigns"].append(str(self.campaign_1.id))
+        if "c2" in campaigns:
+            param["campaigns"].append(str(self.campaign_2.id))
+        if "campaigns" in param:
+            param["campaigns"] = ",".join(param["campaigns"])
+
+        if start_date:
+            param["start_date"] = start_date
+        if end_date:
+            param["end_date"] = end_date
+
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_200_OK
+        results = response.data.get("results")
+        results = [result.values() for result in results]
+        zipped_results = [list(zip(a, b)) for a, b in zip(results, expected_results)][0]
+        for response_metric, expected_metric in zipped_results:
+            assert response_metric == expected_metric
+
+    def test_get_performance_time_series_without_aggregate_by(self):
+        response = self.client.get(self.url)
+        assert response.status_code == HTTP_400_BAD_REQUEST
 
 
 class TestPerformance(APITestCase):
