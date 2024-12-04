@@ -1,4 +1,5 @@
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth import authenticate, login
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import (
     Avg,
@@ -13,20 +14,24 @@ from django.db.models import (
 )
 from django.db.models.functions import TruncDay, TruncMonth, TruncWeek
 from django.shortcuts import get_object_or_404
-from rest_framework.authentication import TokenAuthentication
+from knox.auth import TokenAuthentication
+from knox.views import LoginView as KnoxLoginView
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.views import APIView
 
 from .models import AdGroupStats, Campaign
 from .serializers import (
     CampaignSerializer,
+    LoginSerializer,
     PerformanceMetricSerializer,
     PerformanceQuerySerializer,
     PerformanceTimeSeriesMetricSerializer,
     PerformanceTimeSeriesQuerySerializer,
+    UserSerializer,
 )
 
 
@@ -289,3 +294,31 @@ class PerformanceComparisonRetrieve(RetrieveAPIView):
         serializer.is_valid()
 
         return Response(serializer.data)
+
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"user": serializer.data}, status=201)
+        return Response(serializer.errors, status=400)
+
+
+class LoginView(KnoxLoginView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, format=None):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data["username"]
+        password = serializer.validated_data["password"]
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+        else:
+            return Response({"error": "Invalid login credentials"}, status=401)
+
+        return super(LoginView, self).post(request, format=None)
