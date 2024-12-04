@@ -14,6 +14,9 @@ pytest = "*"
 pytest-django = "*"
 factory-boy = "*"
 pytest-cov = "*"
+django-extensions = "*"
+ipython = "*"
+django-silk = "*"
 
 [requires]
 python_version = "3.12"
