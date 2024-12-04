@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "analytics",
     "rest_framework.authtoken",
+    "knox",
     "silk",
 ]
 
@@ -137,7 +139,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "knox.auth.TokenAuthentication",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.UserRateThrottle",
@@ -146,3 +148,5 @@ REST_FRAMEWORK = {
         "user": "5/min",
     },
 }
+
+KNOX_EXPIRY = timedelta(hours=0.5)

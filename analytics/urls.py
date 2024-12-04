@@ -14,4 +14,6 @@ urlpatterns = [
         views.PerformanceComparisonRetrieve.as_view(),
         name="performance-comparison",
     ),
+    path("api/v1/register/", views.RegisterView.as_view(), name="register"),
+    path("api/v1/login/", views.LoginView.as_view(), name="login"),
 ]
