@@ -434,7 +434,59 @@ class TestPerformanceTimeSeries(APITestCase):
 class TestPerformance(APITestCase):
     def setUp(self):
         super().setUp()
-        AdGroupStatsFactory.create_batch(5)
+        self.campaign_1 = CampaignFactory()
+        self.campaign_2 = CampaignFactory()
+        ad_group_stats_data = [
+            {
+                "date": "2024-11-27",
+                "cost": 100,
+                "ad_group__campaign_id": self.campaign_1.id,
+                "conversions": 1,
+                "clicks": 1,
+                "impressions": 1,
+            },
+            {
+                "date": "2024-12-02",
+                "cost": 100,
+                "ad_group__campaign_id": self.campaign_1.id,
+                "conversions": 1,
+                "clicks": 1,
+                "impressions": 1,
+            },
+            {
+                "date": "2024-12-04",
+                "cost": 100,
+                "ad_group__campaign_id": self.campaign_1.id,
+                "conversions": 1,
+                "clicks": 1,
+                "impressions": 1,
+            },
+            {
+                "date": "2024-11-27",
+                "cost": 100,
+                "ad_group__campaign_id": self.campaign_2.id,
+                "conversions": 1,
+                "clicks": 1,
+                "impressions": 1,
+            },
+            {
+                "date": "2024-12-02",
+                "cost": 100,
+                "ad_group__campaign_id": self.campaign_2.id,
+                "conversions": 1,
+                "clicks": 1,
+                "impressions": 1,
+            },
+            {
+                "date": "2024-12-04",
+                "cost": 100,
+                "ad_group__campaign_id": self.campaign_2.id,
+                "conversions": 1,
+                "clicks": 1,
+                "impressions": 1,
+            },
+        ]
+        [AdGroupStatsFactory(**data) for data in ad_group_stats_data]
         token = TokenFactory()
         self.client.force_authenticate(user=token.user)
         self.url = reverse("performances")
@@ -479,3 +531,77 @@ class TestPerformance(APITestCase):
             url,
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
+
+    @parameterized.expand(
+        [
+            (
+                "preceding",
+                "2024-12-05",
+                "2024-12-07",
+                [None, None, None, None, None, None, None, None],
+                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+            ),
+            (
+                "previous_month",
+                "2025-01-02",
+                "2025-01-04",
+                [None, None, None, None, None, None, None, None],
+                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+            ),
+            (
+                "preceding",
+                "2024-12-05",
+                "2024-12-20",
+                [None, None, None, None, None, None, None, None],
+                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+            ),
+            (
+                "previous_month",
+                "2024-12-01",
+                "2024-12-30",
+                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+                [200, 2, 2, 2, 100, 100, 10000, 1, 1],
+            ),
+        ]
+    )
+    def test_get_performance_data(
+        self,
+        compare_mode,
+        start_date,
+        end_date,
+        expected_base_performance,
+        expected_compared_performance,
+    ):
+        param = {
+            "compare_mode": compare_mode,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_200_OK
+        results = response.data
+        base_performance_keys = [
+            key for key in results.keys() if key.startswith("base")
+        ]
+        compared_performance_keys = [
+            key for key in results.keys() if key.startswith("compared")
+        ]
+
+        base_performance_result = [results[key] for key in base_performance_keys]
+        compared_performance_result = [
+            results[key] for key in compared_performance_keys
+        ]
+
+        for response_result, expected_result in list(
+            zip(base_performance_result, expected_base_performance)
+        ):
+            assert response_result == expected_result
+
+        for response_result, expected_result in list(
+            zip(compared_performance_result, expected_compared_performance)
+        ):
+            assert response_result == expected_result
