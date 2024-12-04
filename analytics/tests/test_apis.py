@@ -489,7 +489,7 @@ class TestPerformance(APITestCase):
         [AdGroupStatsFactory(**data) for data in ad_group_stats_data]
         token = TokenFactory()
         self.client.force_authenticate(user=token.user)
-        self.url = reverse("performances")
+        self.url = reverse("performances-comparison")
 
     @parameterized.expand(
         [
