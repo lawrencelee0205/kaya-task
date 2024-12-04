@@ -97,6 +97,103 @@ class CampaignsListCreate(ListCreateAPIView):
         return Response(serializer.data)
 
 
+class PerformanceTimeSeriesList(ListCreateAPIView):
+    pagination_class = LimitOffsetPagination
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def list(self, request, *args, **kwargs):
+        data = request.query_params.dict().copy()
+        if "campaigns" in data:
+            data["campaigns"] = data["campaigns"].split(",")
+
+        serializer = PerformanceTimeSeriesQuerySerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+        start_date = serializer.validated_data.get("start_date")
+        end_date = serializer.validated_data.get("end_date")
+        campaigns = serializer.validated_data.get("campaigns")
+
+        filter_condition = {}
+        if start_date:
+            filter_condition["date__gte"] = start_date
+        if end_date:
+            filter_condition["date__lte"] = end_date
+        if campaigns:
+            filter_condition["ad_group__campaign__id__in"] = campaigns
+
+        time_granularity = serializer.validated_data.get("aggregate_by")
+        time_granularity_aggregate = {}
+        match time_granularity:
+            case "day":
+                time_granularity_aggregate["time_granularity"] = TruncDay("date")
+            case "week":
+                time_granularity_aggregate["time_granularity"] = TruncWeek("date")
+            case "month":
+                time_granularity_aggregate["time_granularity"] = TruncMonth("date")
+
+        group_by_values = ["time_granularity"]
+
+        final_values = [
+            "total_cost",
+            "total_clicks",
+            "total_conversions",
+            "average_cost_per_conversion",
+            "average_cost_per_click",
+            "average_click_through_rate",
+            "average_conversion_rate",
+        ]
+
+        ad_group_stats_metric = {
+            "total_cost": Sum("cost"),
+            "total_clicks": Sum("clicks"),
+            "total_conversions": Sum("conversions"),
+            "average_cost_per_conversion": Case(
+                When(total_conversions=0, then=0),
+                default=F("total_cost") / F("total_conversions"),
+                output_field=FloatField(),
+            ),
+            "average_cost_per_click": Case(
+                When(total_clicks=0, then=0),
+                default=F("total_cost") / F("total_clicks"),
+                output_field=FloatField(),
+            ),
+            "average_click_through_rate": Case(
+                When(impressions=0, then=0),
+                default=F("clicks") / F("impressions"),
+                output_field=FloatField(),
+            ),
+            "average_conversion_rate": Case(
+                When(clicks=0, then=0),
+                default=F("conversions") / F("clicks"),
+                output_field=FloatField(),
+            ),
+        }
+
+        ad_group_stats = (
+            AdGroupStats.objects.filter(**filter_condition)
+            .annotate(
+                campaign_id=F("ad_group__campaign__id"), **time_granularity_aggregate
+            )
+            .values(
+                *group_by_values,
+            )
+            .annotate(**ad_group_stats_metric)
+            .order_by("time_granularity")
+            .values(*final_values)
+        )
+        serializer = PerformanceTimeSeriesMetricSerializer(
+            data=list(ad_group_stats), many=True
+        )
+
+        if serializer.is_valid():
+            page = self.paginate_queryset(serializer.data)
+            return self.get_paginated_response(page)
+
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
