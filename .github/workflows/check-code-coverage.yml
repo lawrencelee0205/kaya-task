@@ -6,6 +6,15 @@ on:
       - main
     types: [opened, synchronize]
 
+env:
+  DB_USER: github_action_test
+  DB_PASSWORD: gitub_action_test
+  DB_NAME: github_action_test
+  DB_PORT: 5432
+  DEBUG: "False"
+  SECRET_KEY: example
+  ALLOWED_HOSTS: localhost,127.0.0.1
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
