@@ -44,11 +44,11 @@ class CampaignListAPITestCase(APITestCase):
         assert target_campaign.name == update_name
 
     def test_update_not_exist_campaign_name(self):
-        target_campaign = Campaign.objects.first()
+        target_campaign = Campaign.objects.last()
 
         update_name = "Updated Name"
         data = {
-            "id": 0,
+            "id": target_campaign.id + 1,
             "name": update_name,
         }
         response = self.client.post(self.url, data, format="json")

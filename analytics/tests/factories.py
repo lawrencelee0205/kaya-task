@@ -10,6 +10,7 @@ from analytics.models import AdGroup, AdGroupStats, Campaign
 class CampaignFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Campaign
+        django_get_or_create = ("name", "campaign_type")
 
     id = factory.Sequence(lambda n: n)
     name = factory.Faker("word")
