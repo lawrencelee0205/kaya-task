@@ -102,7 +102,11 @@ def campaigns(request):
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def performance_time_series(request):
-    serializer = PerformanceTimeSeriesQuerySerializer(data=request.query_params)
+    data = request.query_params.dict().copy()
+    if "campaigns" in data:
+        data["campaigns"] = data["campaigns"].split(",")
+
+    serializer = PerformanceTimeSeriesQuerySerializer(data=data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
