@@ -24,7 +24,9 @@ jobs:
       db:
         image: postgres:14-alpine
         env:
-          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+          POSTGRES_DB: ${{ env.DB_NAME }}
           ports: "${DB_PORT}:5432"
     steps:
       - name: Checkout code
