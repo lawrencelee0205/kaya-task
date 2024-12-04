@@ -1,4 +1,4 @@
-from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 from rest_framework.decorators import (
     api_view,
@@ -102,7 +102,11 @@ def campaigns(request):
 @permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def performance_time_series(request):
-    serializer = PerformanceTimeSeriesQuerySerializer(data=request.query_params)
+    data = request.query_params.dict().copy()
+    if "campaigns" in data:
+        data["campaigns"] = data["campaigns"].split(",")
+
+    serializer = PerformanceTimeSeriesQuerySerializer(data=data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
@@ -128,48 +132,53 @@ def performance_time_series(request):
         case "month":
             time_granularity_aggregate["time_granularity"] = TruncMonth("date")
 
+    group_by_values = ["time_granularity"]
+
+    final_values = [
+        "total_cost",
+        "total_clicks",
+        "total_conversions",
+        "average_cost_per_conversion",
+        "average_cost_per_click",
+        "average_click_through_rate",
+        "average_conversion_rate",
+    ]
+
+    ad_group_stats_metric = {
+        "total_cost": Sum("cost"),
+        "total_clicks": Sum("clicks"),
+        "total_conversions": Sum("conversions"),
+        "average_cost_per_conversion": Case(
+            When(total_conversions=0, then=0),
+            default=F("total_cost") / F("total_conversions"),
+            output_field=FloatField(),
+        ),
+        "average_cost_per_click": Case(
+            When(total_clicks=0, then=0),
+            default=F("total_cost") / F("total_clicks"),
+            output_field=FloatField(),
+        ),
+        "average_click_through_rate": Case(
+            When(impressions=0, then=0),
+            default=F("clicks") / F("impressions"),
+            output_field=FloatField(),
+        ),
+        "average_conversion_rate": Case(
+            When(clicks=0, then=0),
+            default=F("conversions") / F("clicks"),
+            output_field=FloatField(),
+        ),
+    }
+
     ad_group_stats = (
         AdGroupStats.objects.filter(**filter_condition)
         .annotate(campaign_id=F("ad_group__campaign__id"), **time_granularity_aggregate)
         .values(
-            "campaign_id",
-            "time_granularity",
+            *group_by_values,
         )
-        .annotate(
-            total_cost=Sum("cost"),
-            total_clicks=Sum("clicks"),
-            total_conversions=Sum("conversions"),
-            average_cost_per_conversion=Case(
-                When(total_conversions=0, then=0),
-                default=F("total_cost") / F("total_conversions"),
-                output_field=FloatField(),
-            ),
-            average_cost_per_click=Case(
-                When(total_clicks=0, then=0),
-                default=F("total_cost") / F("total_clicks"),
-                output_field=FloatField(),
-            ),
-            average_click_through_rate=Case(
-                When(impressions=0, then=0),
-                default=F("clicks") / F("impressions"),
-                output_field=FloatField(),
-            ),
-            average_conversion_rate=Case(
-                When(clicks=0, then=0),
-                default=F("conversions") / F("clicks"),
-                output_field=FloatField(),
-            ),
-        )
-        .values(
-            "campaign_id",
-            "total_cost",
-            "total_clicks",
-            "total_conversions",
-            "average_cost_per_conversion",
-            "average_cost_per_click",
-            "average_click_through_rate",
-            "average_conversion_rate",
-        )
+        .annotate(**ad_group_stats_metric)
+        .order_by("time_granularity")
+        .values(*final_values)
     )
     paginator = LimitOffsetPagination()
     page = paginator.paginate_queryset(ad_group_stats, request)
@@ -198,11 +207,11 @@ def performances(request):
     date_delta = end_date - start_date
 
     if compare_mode == "preceding":
-        compared_end_date = start_date - timedelta(days=1)
-        compared_start_date = compared_end_date - timedelta(days=date_delta.days)
+        compared_end_date = start_date - relativedelta(days=1)
+        compared_start_date = compared_end_date - relativedelta(days=date_delta.days)
     elif compare_mode == "previous_month":
-        compared_end_date = end_date - timedelta(months=1)
-        compared_start_date = start_date - timedelta(months=1)
+        compared_end_date = end_date - relativedelta(months=1)
+        compared_start_date = start_date - relativedelta(months=1)
 
     base_performance = AdGroupStats.objects.filter(
         date__range=(start_date, end_date)
@@ -272,8 +281,6 @@ def performances(request):
         ),
     )
 
-    base_performance.pop("base_total_impressions")
-    compared_performance.pop("compared_total_impressions")
     serializer = PerformanceMetricSerializer(
         data={**base_performance, **compared_performance}
     )
