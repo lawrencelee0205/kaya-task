@@ -1,15 +1,18 @@
-from analytics.models import Campaign
-from rest_framework.test import APITestCase
-from .factories import AdGroupStatsFactory, CampaignFactory, TokenFactory
+from urllib.parse import urlencode
+
 from django.urls import reverse
+from parameterized import parameterized
 from rest_framework.status import (
     HTTP_200_OK,
-    HTTP_404_NOT_FOUND,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
 )
-from parameterized import parameterized
-from urllib.parse import urlencode
+from rest_framework.test import APITestCase
+
+from analytics.models import Campaign
+
+from .factories import AdGroupStatsFactory, CampaignFactory, TokenFactory
 
 
 class CampaignListAPITestCase(APITestCase):

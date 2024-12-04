@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Campaign, AdGroup, AdGroupStats
+
+from .models import AdGroup, AdGroupStats, Campaign
 
 # Register your models here.
 admin.site.register(Campaign)

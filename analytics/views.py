@@ -1,31 +1,32 @@
 from dateutil.relativedelta import relativedelta
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    F,
+    FloatField,
+    OuterRef,
+    Subquery,
+    Sum,
+    When,
+)
+from django.db.models.functions import TruncDay, TruncMonth, TruncWeek
+from django.shortcuts import get_object_or_404
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
-from .models import Campaign, AdGroupStats
+
+from .models import AdGroupStats, Campaign
 from .serializers import (
     CampaignSerializer,
     PerformanceMetricSerializer,
-    PerformanceTimeSeriesQuerySerializer,
     PerformanceQuerySerializer,
     PerformanceTimeSeriesMetricSerializer,
-)
-from django.shortcuts import get_object_or_404
-from django.db.models.functions import TruncMonth, TruncDay, TruncWeek
-from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import (
-    Subquery,
-    OuterRef,
-    Count,
-    FloatField,
-    Sum,
-    Avg,
-    F,
-    Case,
-    When,
+    PerformanceTimeSeriesQuerySerializer,
 )
 
 

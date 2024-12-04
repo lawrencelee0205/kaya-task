@@ -1,9 +1,10 @@
 import factory
-from factory import fuzzy
-from analytics.models import Campaign, AdGroup, AdGroupStats
-from analytics.enums import CampaignTypeChoices, AdGroupDeviceChoices
-from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
+from factory import fuzzy
+from rest_framework.authtoken.models import Token
+
+from analytics.enums import AdGroupDeviceChoices, CampaignTypeChoices
+from analytics.models import AdGroup, AdGroupStats, Campaign
 
 
 class CampaignFactory(factory.django.DjangoModelFactory):

@@ -1,7 +1,8 @@
 # myapp/serializers.py
-from rest_framework import serializers
-from .models import Campaign
 from django.db import transaction
+from rest_framework import serializers
+
+from .models import Campaign
 
 
 class CampaignSerializer(serializers.ModelSerializer):
