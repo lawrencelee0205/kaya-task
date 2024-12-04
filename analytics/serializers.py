@@ -40,6 +40,18 @@ class PerformanceTimeSeriesQuerySerializer(serializers.Serializer):
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
 
+    def validate(self, data):
+        start_date = data.get("start_date", None)
+        end_date = data.get("end_date", None)
+
+        if start_date is None or end_date is None:
+            return data
+
+        if start_date > end_date:
+            raise serializers.ValidationError("Start date must be before end date.")
+
+        return data
+
 
 class PerformanceTimeSeriesMetricSerializer(serializers.Serializer):
     campaign_id = serializers.IntegerField(required=False)
@@ -58,6 +70,18 @@ class PerformanceQuerySerializer(serializers.Serializer):
     compare_mode = serializers.ChoiceField(
         choices=[("preceding", "preceding"), ("previous_month", "previous_month")]
     )
+
+    def validate(self, data):
+        start_date = data.get("start_date", None)
+        end_date = data.get("end_date", None)
+
+        if start_date is None or end_date is None:
+            return data
+
+        if start_date > end_date:
+            raise serializers.ValidationError("Start date must be before end date.")
+
+        return data
 
 
 class BasePerformanceSerializer(serializers.Serializer):

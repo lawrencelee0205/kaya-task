@@ -194,7 +194,7 @@ class PerformanceTimeSeriesList(ListCreateAPIView):
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
-class PerformanceRetrieve(RetrieveAPIView):
+class PerformanceComparisonRetrieve(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 

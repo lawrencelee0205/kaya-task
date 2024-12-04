@@ -9,8 +9,8 @@ urlpatterns = [
         name="performance-time-series",
     ),
     path(
-        "api/v1/performances-comparison/",
-        views.PerformanceRetrieve.as_view(),
-        name="performances-comparison",
+        "api/v1/performance-comparison/",
+        views.PerformanceComparisonRetrieve.as_view(),
+        name="performance-comparison",
     ),
 ]

@@ -2,12 +2,17 @@ from analytics.models import Campaign
 from rest_framework.test import APITestCase
 from .factories import AdGroupStatsFactory, CampaignFactory, TokenFactory
 from django.urls import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_404_NOT_FOUND,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+)
 from parameterized import parameterized
 from urllib.parse import urlencode
 
 
-class TestCampaignList(APITestCase):
+class CampaignListAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         AdGroupStatsFactory.create_batch(30)
@@ -50,7 +55,7 @@ class TestCampaignList(APITestCase):
         assert target_campaign.name != update_name
 
 
-class TestPerformanceTimeSeries(APITestCase):
+class PerformanceTimeSeriesAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.campaign_1 = CampaignFactory()
@@ -114,7 +119,7 @@ class TestPerformanceTimeSeries(APITestCase):
         [("day"), ("week"), ("month")],
     )
     def test_get_performance_time_series_with_aggregate_by(self, aggregate_by):
-        param = {"aggregate_by": "day"}
+        param = {"aggregate_by": aggregate_by}
         query_string = urlencode(param)
         url = f"{self.url}?{query_string}" if query_string else self.url
         response = self.client.get(
@@ -430,8 +435,49 @@ class TestPerformanceTimeSeries(APITestCase):
         response = self.client.get(self.url)
         assert response.status_code == HTTP_400_BAD_REQUEST
 
+    def test_get_performance_time_series_without_auth(self):
+        self.client.force_authenticate(user=None)
+        param = {"aggregate_by": "day"}
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_401_UNAUTHORIZED
 
-class TestPerformance(APITestCase):
+    def test_get_performance_time_series_with_invalid_aggregate_by(self):
+        param = {"aggregate_by": "invalid"}
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+    def test_get_performance_time_series_with_invalid_date_format(self):
+        param = {"aggregate_by": "day", "start_date": "01-01-2024"}
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+    def test_get_performance_time_series_with_end_date_before_start_date(self):
+        param = {
+            "aggregate_by": "day",
+            "start_date": "2024-12-07",
+            "end_date": "2024-12-05",
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+class PerformanceComparisonAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.campaign_1 = CampaignFactory()
@@ -489,7 +535,7 @@ class TestPerformance(APITestCase):
         [AdGroupStatsFactory(**data) for data in ad_group_stats_data]
         token = TokenFactory()
         self.client.force_authenticate(user=token.user)
-        self.url = reverse("performances-comparison")
+        self.url = reverse("performance-comparison")
 
     @parameterized.expand(
         [
@@ -497,7 +543,7 @@ class TestPerformance(APITestCase):
             ("previous_month", "2022-01-01", "2022-01-31"),
         ]
     )
-    def test_get_performance(self, compare_mode, start_date, end_date):
+    def test_get_performance_comparison(self, compare_mode, start_date, end_date):
         param = {
             "compare_mode": compare_mode,
             "start_date": start_date,
@@ -517,7 +563,7 @@ class TestPerformance(APITestCase):
             ("preceding", "2022-01-01", None),
         ]
     )
-    def test_get_performance_without_mandatory_params(
+    def test_get_performance_comparison_without_mandatory_params(
         self, compare_mode, start_date, end_date
     ):
         param = {
@@ -571,7 +617,7 @@ class TestPerformance(APITestCase):
             ),
         ]
     )
-    def test_get_performance_data(
+    def test_get_performance_comparison_data(
         self,
         compare_mode,
         start_date,
@@ -612,3 +658,56 @@ class TestPerformance(APITestCase):
             zip(compared_performance_result, expected_compared_performance)
         ):
             assert response_result == expected_result
+
+    def test_get_performance_comparison_without_auth(self):
+        param = {
+            "compare_mode": "preceding",
+            "start_date": "2024-12-05",
+            "end_date": "2024-12-07",
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        self.client.force_authenticate(user=None)
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    def test_get_performance_comparison_with_invalid_compare_mode(self):
+        param = {
+            "compare_mode": "invalid",
+            "start_date": "2024-12-05",
+            "end_date": "2024-12-07",
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+    def test_get_performance_comparison_with_invalid_date_format(self):
+        param = {
+            "compare_mode": "preceding",
+            "start_date": "01-01-2024",
+            "end_date": "01-03-2024",
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+
+    def test_get_performance_comparison_with_end_date_before_start_date(self):
+        param = {
+            "compare_mode": "preceding",
+            "start_date": "2024-12-07",
+            "end_date": "2024-12-05",
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
