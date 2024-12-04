@@ -60,7 +60,7 @@ class PerformanceQuerySerializer(serializers.Serializer):
     )
 
 
-class PerformanceMetricSerializer(serializers.Serializer):
+class BasePerformanceSerializer(serializers.Serializer):
     base_total_cost = serializers.FloatField()
     base_total_clicks = serializers.IntegerField()
     base_total_conversions = serializers.FloatField()
@@ -70,6 +70,8 @@ class PerformanceMetricSerializer(serializers.Serializer):
     base_conversion_rate = serializers.FloatField()
     base_click_through_rate = serializers.FloatField()
 
+
+class ComparedPerformanceSerializer(serializers.Serializer):
     compared_total_cost = serializers.FloatField()
     compared_total_clicks = serializers.IntegerField()
     compared_total_conversions = serializers.FloatField()
@@ -78,3 +80,9 @@ class PerformanceMetricSerializer(serializers.Serializer):
     compared_cost_per_mile_impression = serializers.FloatField()
     compared_conversion_rate = serializers.FloatField()
     compared_click_through_rate = serializers.FloatField()
+
+
+class PerformanceMetricSerializer(
+    BasePerformanceSerializer, ComparedPerformanceSerializer
+):
+    pass
