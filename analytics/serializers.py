@@ -1,7 +1,8 @@
 # myapp/serializers.py
-from rest_framework import serializers
-from .models import Campaign
 from django.db import transaction
+from rest_framework import serializers
+
+from .models import Campaign
 
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -40,6 +41,18 @@ class PerformanceTimeSeriesQuerySerializer(serializers.Serializer):
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
 
+    def validate(self, data):
+        start_date = data.get("start_date", None)
+        end_date = data.get("end_date", None)
+
+        if start_date is None or end_date is None:
+            return data
+
+        if start_date > end_date:
+            raise serializers.ValidationError("Start date must be before end date.")
+
+        return data
+
 
 class PerformanceTimeSeriesMetricSerializer(serializers.Serializer):
     campaign_id = serializers.IntegerField(required=False)
@@ -59,8 +72,20 @@ class PerformanceQuerySerializer(serializers.Serializer):
         choices=[("preceding", "preceding"), ("previous_month", "previous_month")]
     )
 
+    def validate(self, data):
+        start_date = data.get("start_date", None)
+        end_date = data.get("end_date", None)
 
-class PerformanceMetricSerializer(serializers.Serializer):
+        if start_date is None or end_date is None:
+            return data
+
+        if start_date > end_date:
+            raise serializers.ValidationError("Start date must be before end date.")
+
+        return data
+
+
+class BasePerformanceSerializer(serializers.Serializer):
     base_total_cost = serializers.FloatField()
     base_total_clicks = serializers.IntegerField()
     base_total_conversions = serializers.FloatField()
@@ -70,6 +95,8 @@ class PerformanceMetricSerializer(serializers.Serializer):
     base_conversion_rate = serializers.FloatField()
     base_click_through_rate = serializers.FloatField()
 
+
+class ComparedPerformanceSerializer(serializers.Serializer):
     compared_total_cost = serializers.FloatField()
     compared_total_clicks = serializers.IntegerField()
     compared_total_conversions = serializers.FloatField()
@@ -78,3 +105,9 @@ class PerformanceMetricSerializer(serializers.Serializer):
     compared_cost_per_mile_impression = serializers.FloatField()
     compared_conversion_rate = serializers.FloatField()
     compared_click_through_rate = serializers.FloatField()
+
+
+class PerformanceMetricSerializer(
+    BasePerformanceSerializer, ComparedPerformanceSerializer
+):
+    pass

@@ -1,5 +1,6 @@
 from django.db import models
-from .enums import CampaignTypeChoices, AdGroupDeviceChoices
+
+from .enums import AdGroupDeviceChoices, CampaignTypeChoices
 
 
 class Campaign(models.Model):

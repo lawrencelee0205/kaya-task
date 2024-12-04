@@ -15,3 +15,10 @@ repos:
     hooks:
     -   id: flake8
         args: [--max-line-length=120]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black", "--filter-files"]
