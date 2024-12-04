@@ -46,9 +46,3 @@ class AdGroupStats(AdGroupStatsMetricMixin):
 
     class Meta:
         indexes = [BTreeIndex(fields=["date"], name="ad_group_date")]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["date", "ad_group_id", "device"],
-                name="ad_group_date_device_unique",
-            )
-        ]
