@@ -2,11 +2,11 @@ from django.db import models
 
 
 class CampaignTypeChoices(models.TextChoices):
-    SEARCH_STANDARD = "Search Standard"
-    VIDEO_RESPONSIVE = "Video Responsive"
+    SEARCH_STANDARD = "SEARCH_STANDARD"
+    VIDEO_RESPONSIVE = "VIDEO_RESPONSIVE"
 
 
 class AdGroupDeviceChoices(models.TextChoices):
-    DESKTOP = "Desktop"
-    MOBILE = "Mobile"
-    TABLET = "Tablet"
+    DESKTOP = "DESKTOP"
+    MOBILE = "MOBILE"
+    TABLET = "TABLET"
