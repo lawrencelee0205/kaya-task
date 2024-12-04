@@ -1,5 +1,7 @@
+from unittest.mock import patch
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.status import (
@@ -7,6 +9,7 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_429_TOO_MANY_REQUESTS,
 )
 from rest_framework.test import APITestCase
 
@@ -22,6 +25,7 @@ class CampaignListAPITestCase(APITestCase):
         token = TokenFactory()
         self.client.force_authenticate(user=token.user)
         self.url = reverse("campaigns")
+        self.throttle_rate = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"]
 
     def test_get_campaign_list(self):
         response = self.client.get(self.url)
@@ -57,6 +61,33 @@ class CampaignListAPITestCase(APITestCase):
         target_campaign.refresh_from_db()
         assert target_campaign.name != update_name
 
+    @patch("rest_framework.throttling.UserRateThrottle.get_rate")
+    def test_get_campaign_list_exceed_throttle_limit(self, mock_get_rate):
+        mock_get_rate.return_value = self.throttle_rate
+        for _ in range(5):
+            response = self.client.get(self.url)
+            assert response.status_code == HTTP_200_OK
+
+        response = self.client.get(self.url)
+        assert response.status_code == HTTP_429_TOO_MANY_REQUESTS
+
+    @patch("rest_framework.throttling.UserRateThrottle.get_rate")
+    def test_update_campaign_name_exceed_throttle_limit(self, mock_get_rate):
+        mock_get_rate.return_value = self.throttle_rate
+        target_campaign = Campaign.objects.first()
+
+        update_name = "Updated Name"
+        data = {
+            "id": target_campaign.id,
+            "name": update_name,
+        }
+        for _ in range(5):
+            response = self.client.post(self.url, data, format="json")
+            assert response.status_code == HTTP_200_OK
+
+        response = self.client.post(self.url, data, format="json")
+        assert response.status_code == HTTP_429_TOO_MANY_REQUESTS
+
 
 class PerformanceTimeSeriesAPITestCase(APITestCase):
     def setUp(self):
@@ -64,6 +95,7 @@ class PerformanceTimeSeriesAPITestCase(APITestCase):
         self.campaign_1 = CampaignFactory()
         self.campaign_2 = CampaignFactory()
         self.url = reverse("performance-time-series")
+        self.throttle_rate = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"]
         ad_group_stats_data = [
             {
                 "date": "2024-11-27",
@@ -479,12 +511,30 @@ class PerformanceTimeSeriesAPITestCase(APITestCase):
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
 
+    @patch("rest_framework.throttling.UserRateThrottle.get_rate")
+    def test_get_performance_time_series_exceed_throttle_limit(self, mock_get_rate):
+        mock_get_rate.return_value = self.throttle_rate
+        param = {"aggregate_by": "day"}
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        for _ in range(5):
+            response = self.client.get(
+                url,
+            )
+            assert response.status_code == HTTP_200_OK
+
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_429_TOO_MANY_REQUESTS
+
 
 class PerformanceComparisonAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.campaign_1 = CampaignFactory()
         self.campaign_2 = CampaignFactory()
+        self.throttle_rate = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["user"]
         ad_group_stats_data = [
             {
                 "date": "2024-11-27",
@@ -714,3 +764,24 @@ class PerformanceComparisonAPITestCase(APITestCase):
             url,
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
+
+    @patch("rest_framework.throttling.UserRateThrottle.get_rate")
+    def test_get_performance_comparison_exceed_throttle_limit(self, mock_get_rate):
+        mock_get_rate.return_value = self.throttle_rate
+        param = {
+            "compare_mode": "preceding",
+            "start_date": "2024-12-05",
+            "end_date": "2024-12-07",
+        }
+        query_string = urlencode(param)
+        url = f"{self.url}?{query_string}" if query_string else self.url
+        for _ in range(5):
+            response = self.client.get(
+                url,
+            )
+            assert response.status_code == HTTP_200_OK
+
+        response = self.client.get(
+            url,
+        )
+        assert response.status_code == HTTP_429_TOO_MANY_REQUESTS
