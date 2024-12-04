@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 class TestCampaignList(APITestCase):
     def setUp(self):
         super().setUp()
-        AdGroupStatsFactory.create_batch(10)
+        AdGroupStatsFactory.create_batch(30)
         token = TokenFactory()
         self.client.force_authenticate(user=token.user)
         self.url = reverse("campaigns")
@@ -539,28 +539,35 @@ class TestPerformance(APITestCase):
                 "2024-12-05",
                 "2024-12-07",
                 [None, None, None, None, None, None, None, None],
-                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+                [400, 4, 4, 100, 100, 100_000, 1, 1],
             ),
             (
                 "previous_month",
                 "2025-01-02",
                 "2025-01-04",
                 [None, None, None, None, None, None, None, None],
-                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+                [400, 4, 4, 100, 100, 100_000, 1, 1],
             ),
             (
                 "preceding",
                 "2024-12-05",
                 "2024-12-20",
                 [None, None, None, None, None, None, None, None],
-                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
+                [600, 6, 6, 100, 100, 100_000, 1, 1],
             ),
             (
                 "previous_month",
                 "2024-12-01",
                 "2024-12-30",
-                [400, 4, 4, 4, 100, 100, 10000, 1, 1],
-                [200, 2, 2, 2, 100, 100, 10000, 1, 1],
+                [400, 4, 4, 100, 100, 100_000, 1, 1],
+                [200, 2, 2, 100, 100, 100_000, 1, 1],
+            ),
+            (
+                "preceding",
+                "2024-12-03",
+                "2024-12-04",
+                [200, 2, 2, 100, 100, 100_000, 1, 1],
+                [200, 2, 2, 100, 100, 100_000, 1, 1],
             ),
         ]
     )

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 from rest_framework.decorators import (
     api_view,
@@ -207,11 +207,11 @@ def performances(request):
     date_delta = end_date - start_date
 
     if compare_mode == "preceding":
-        compared_end_date = start_date - timedelta(days=1)
-        compared_start_date = compared_end_date - timedelta(days=date_delta.days)
+        compared_end_date = start_date - relativedelta(days=1)
+        compared_start_date = compared_end_date - relativedelta(days=date_delta.days)
     elif compare_mode == "previous_month":
-        compared_end_date = end_date - timedelta(months=1)
-        compared_start_date = start_date - timedelta(months=1)
+        compared_end_date = end_date - relativedelta(months=1)
+        compared_start_date = start_date - relativedelta(months=1)
 
     base_performance = AdGroupStats.objects.filter(
         date__range=(start_date, end_date)
@@ -281,8 +281,6 @@ def performances(request):
         ),
     )
 
-    base_performance.pop("base_total_impressions")
-    compared_performance.pop("compared_total_impressions")
     serializer = PerformanceMetricSerializer(
         data={**base_performance, **compared_performance}
     )
