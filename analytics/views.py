@@ -9,6 +9,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListCreateAPIView
 from .models import Campaign, AdGroupStats
 from .serializers import (
     CampaignSerializer,
@@ -33,69 +34,67 @@ from django.db.models import (
 )
 
 
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-@api_view(["GET", "POST"])
-def campaigns(request):
-    if request.method == "POST":
+class CampaignsListCreate(ListCreateAPIView):
+    pagination_class = LimitOffsetPagination
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def list(self, request, *args, **kwargs):
+        average_monthly_cost_subquery = (
+            AdGroupStats.objects.filter(ad_group__campaign_id=OuterRef("id"))
+            .annotate(
+                month=TruncMonth("date"),
+            )
+            .values(
+                "month",
+            )
+            .annotate(average_monthly_cost=Avg("cost"))
+            .values("average_monthly_cost")
+        )
+        average_cost_per_conversion_subquery = (
+            AdGroupStats.objects.filter(ad_group__campaign_id=OuterRef("id"))
+            .values(
+                "ad_group__campaign_id",
+            )
+            .alias(
+                total_cost=Sum("cost"),
+                total_conversion=Sum("conversions"),
+            )
+            .annotate(
+                average_cost_per_conversion=Case(
+                    When(total_conversion=0, then=0),
+                    default=F("total_cost") / F("total_conversion"),
+                    output_field=FloatField(),
+                )
+            )
+            .values("average_cost_per_conversion")
+        )
+        campaigns = Campaign.objects.annotate(
+            ad_group_count=Count("adgroup"),
+            ad_group_names=ArrayAgg("adgroup__name", distinct=True),
+            average_monthly_cost=Subquery(average_monthly_cost_subquery[:1]),
+            average_cost_per_conversion=Subquery(
+                average_cost_per_conversion_subquery[:1]
+            ),
+        ).values(
+            "id",
+            "name",
+            "campaign_type",
+            "ad_group_count",
+            "ad_group_names",
+            "average_monthly_cost",
+            "average_cost_per_conversion",
+        )
+        serializer = CampaignSerializer(campaigns, many=True)
+        page = self.paginate_queryset(serializer.data)
+        return self.get_paginated_response(page)
+
+    def post(self, request, *args, **kwargs):
         campaign = get_object_or_404(Campaign, id=request.data["id"])
         serializer = CampaignSerializer(campaign, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-
-    average_monthly_cost_subquery = (
-        AdGroupStats.objects.filter(ad_group__campaign_id=OuterRef("id"))
-        .annotate(
-            month=TruncMonth("date"),
-        )
-        .values(
-            "month",
-        )
-        .annotate(average_monthly_cost=Avg("cost"))
-        .values("average_monthly_cost")
-    )
-    average_cost_per_conversion_subquery = (
-        AdGroupStats.objects.filter(ad_group__campaign_id=OuterRef("id"))
-        .values(
-            "ad_group__campaign_id",
-        )
-        .alias(
-            total_cost=Sum("cost"),
-            total_conversion=Sum("conversions"),
-        )
-        .annotate(
-            average_cost_per_conversion=Case(
-                When(total_conversion=0, then=0),
-                default=F("total_cost") / F("total_conversion"),
-                output_field=FloatField(),
-            )
-        )
-        .values("average_cost_per_conversion")
-    )
-    campaigns = Campaign.objects.annotate(
-        ad_group_count=Count("adgroup"),
-        ad_group_names=ArrayAgg("adgroup__name", distinct=True),
-        average_monthly_cost=Subquery(average_monthly_cost_subquery[:1]),
-        average_cost_per_conversion=Subquery(average_cost_per_conversion_subquery[:1]),
-    ).values(
-        "id",
-        "name",
-        "campaign_type",
-        "ad_group_count",
-        "ad_group_names",
-        "average_monthly_cost",
-        "average_cost_per_conversion",
-    )
-    paginator = LimitOffsetPagination()
-    page = paginator.paginate_queryset(campaigns, request)
-
-    if page is not None:
-        serializer = CampaignSerializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-    serializer = CampaignSerializer(campaigns, many=True)
-    return Response(serializer.data)
 
 
 @authentication_classes([TokenAuthentication])
