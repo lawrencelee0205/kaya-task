@@ -1,3 +1,6 @@
+
+#### Note: Please install docker and pip package manager before starting the installation.
+
 # Installation
 1. Clone the repo to the local
 2. Create .env file on project root path, kindly use the example below.
