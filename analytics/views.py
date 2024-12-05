@@ -16,7 +16,7 @@ from django.db.models.functions import TruncDay, TruncMonth, TruncWeek
 from django.shortcuts import get_object_or_404
 from knox.auth import TokenAuthentication
 from knox.views import LoginView as KnoxLoginView
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -35,7 +35,7 @@ from .serializers import (
 )
 
 
-class CampaignsListCreate(ListCreateAPIView):
+class CampaignsListCreate(ListAPIView, UpdateAPIView):
     pagination_class = LimitOffsetPagination
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
@@ -90,7 +90,7 @@ class CampaignsListCreate(ListCreateAPIView):
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
 
-    def post(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         campaign = get_object_or_404(Campaign, id=request.data["id"])
         serializer = CampaignSerializer(campaign, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -98,7 +98,7 @@ class CampaignsListCreate(ListCreateAPIView):
         return Response(serializer.data)
 
 
-class PerformanceTimeSeriesList(ListCreateAPIView):
+class PerformanceTimeSeriesList(ListAPIView):
     pagination_class = LimitOffsetPagination
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
