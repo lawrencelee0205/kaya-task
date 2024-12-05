@@ -10,7 +10,7 @@ env:
   DB_USER: github_action_test
   DB_PASSWORD: github_action_test
   DB_NAME: github_action_test
-  DB_PORT: 5433
+  DB_PORT: 5434
   DEBUG: "False"
   SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
