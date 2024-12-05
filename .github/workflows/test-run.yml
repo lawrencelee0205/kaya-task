@@ -16,6 +16,7 @@ env:
   DEBUG: "False"
   SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
+  DATABASE_URL: postgres://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@db:${{ env.DB_PORT }}/${{ env.DB_NAME }}
 
 jobs:
   test:
@@ -40,6 +41,7 @@ jobs:
           echo "DEBUG=${DEBUG}"
           echo "SECRET_KEY=${SECRET_KEY}"
           echo "ALLOWED_HOSTS=${ALLOWED_HOSTS}"
+          echo "DATABASE_URL=${DATABASE_URL}"
 
       - name: Build image and run containers
         run: |
