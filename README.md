@@ -149,4 +149,4 @@ Optionally run `docker compose exec app python manage.py sqlmigrate analytics 00
 3. New user need to register and obtain a token for requesting the APIs.
 
 # Summary
-Users or clients need to be authenticated through registration. Obtaining the token by signing in. A global request rate limit is implemented to all APIs. APIs' Input and query parameter is sanitized by the serializer default or custom validation. Message will be returned for successful or unsuccessful request. Basic github action is used to check the code quality and run unit tests.
+Users or clients need to be authenticated through registration. Obtaining the token by signing in. A global request rate limit is implemented to all APIs. APIs' Input and query parameter is sanitized by the serializer default or custom validation. Result or error message will be returned for successful or unsuccessful request. Basic github action is used to check the code quality and run unit tests.
