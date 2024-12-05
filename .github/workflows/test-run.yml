@@ -10,13 +10,13 @@ on:
 
 env:
   DB_USER: github_action_test
-  DB_PASSWORD: gitub_action_test
+  DB_PASSWORD: github_action_test
   DB_NAME: github_action_test
-  DB_PORT: 5432
+  DB_PORT: 5434
   DEBUG: "False"
   SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
-  DATABASE_URL: postgres://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@db:${{ env.DB_PORT }}/${{ env.DB_NAME }}
+  DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}"
 
 jobs:
   test:
@@ -28,18 +28,22 @@ jobs:
           POSTGRES_USER: ${{ env.DB_USER }}
           POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
           POSTGRES_DB: ${{ env.DB_NAME }}
-          ports: "${DB_PORT}:5432"
+        ports:
+          - 5433:5432
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+
+      - name: Check Docker Compose version
+        run: docker compose version
 
       - name: Print Environment Variables
         run: |
           echo "DEBUG=${DEBUG}"
-          echo "SECRET_KEY=${SECRET_KEY}"
           echo "ALLOWED_HOSTS=${ALLOWED_HOSTS}"
           echo "DATABASE_URL=${DATABASE_URL}"
 
@@ -77,5 +81,5 @@ jobs:
           docker compose run app pytest .
 
       - name: Stop and remove containers
-        if: success() || failure()
+        if: always()
         run: docker compose down

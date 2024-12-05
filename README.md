@@ -20,9 +20,9 @@
     ```
     pipenv sync
     ```
-5. (Shortcut) Run `./dev_start_compose.sh` to automatically build docker image and start services.
+5. (Shortcut) Run `./dev_start.sh` to automatically build docker image and start services.
     ```
-    ./dev_start_compose.sh
+    ./dev_start.sh
     ```
 ### ❗Important
 Always rebuild image when installing package with pipenv. The command should be run sequentially as below:
@@ -34,6 +34,22 @@ Always rebuild image when installing package with pipenv. The command should be 
 1. Run `docker compose exec app python manage.py migrate` to migrate the database
     ```
     docker compose exec app python manage.py migrate
+    ```
+# Data population
+1. Download the ad_group.csv, ad_group_stats.csv and campaign.csv files into the root path of the project.
+2. Run command below to access the shell in django app.
+    ```
+    docker compose exec app python manage.py shell
+    ```
+3. Copy and paste the dev_populate_data.py script into the shell and press enter.
+4. All the data should be added and output should be shown as below:
+    ```
+    Populating Campaigns...
+    4 campaigns added.
+    Populating AdGroups...
+    14 ad groups added.
+    Populating AdGroupStats...
+    5100 ad group stats added.
     ```
 
 # Script to create database tables

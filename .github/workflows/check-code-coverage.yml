@@ -8,13 +8,13 @@ on:
 
 env:
   DB_USER: github_action_test
-  DB_PASSWORD: gitub_action_test
+  DB_PASSWORD: github_action_test
   DB_NAME: github_action_test
-  DB_PORT: 5432
+  DB_PORT: 5434
   DEBUG: "False"
   SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
-  DATABASE_URL: postgres://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@db:${{ env.DB_PORT }}/${{ env.DB_NAME }}
+  DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}"
 
 jobs:
   coverage:
@@ -23,22 +23,23 @@ jobs:
       db:
         image: postgres:14-alpine
         env:
-          POSTGRES_HOST_AUTH_METHOD: trust
-          ports: 5432:5432
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+          POSTGRES_DB: ${{ env.DB_NAME }}
+        ports:
+          - 5433:5432
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Print Environment Variables
         run: |
           echo "DEBUG=${DEBUG}"
-          echo "SECRET_KEY=${SECRET_KEY}"
           echo "ALLOWED_HOSTS=${ALLOWED_HOSTS}"
           echo "DATABASE_URL=${DATABASE_URL}"
-
 
       - name: Build image and run containers
         run: |
@@ -65,14 +66,22 @@ jobs:
             exit 1
           fi
 
+      - name: Run migrations
+        run: |
+          docker compose run app python manage.py migrate --noinput
+
       - name: Build coverage file
         run: |
-          docker compose run app pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered | tee pytest-coverage.txt
+          docker compose run app pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=. | tee pytest-coverage.txt
 
-      - name: Copy Coverage Report
-        run: |
-          docker compose cp app:/code/pytest.xml ./pytest.xml
-          docker compose cp app:/code/pytest-coverage.txt ./pytest-coverage.txt
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            pytest.xml
+            pytest-coverage.txt
+          retention-days: 5
 
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
