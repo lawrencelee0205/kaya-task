@@ -3,5 +3,6 @@ __pycache__
 *.pyo
 *.pyd
 venv/
-.env
+# Should not copy .env file into Docker image in production
+# .env
 .github

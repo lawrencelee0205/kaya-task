@@ -8,6 +8,8 @@ djangorestframework = "*"
 psycopg2-binary = "*"
 parameterized = "*"
 django-rest-knox = "*"
+python-dotenv = "*"
+dj-database-url = "*"
 
 [dev-packages]
 pre-commit = "*"
