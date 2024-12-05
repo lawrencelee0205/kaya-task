@@ -5,6 +5,7 @@ services:
     build:
       context: .
     image: kaya-django-app:latest
+    # Change the ip and port e.g. 127.0.0.1:8000 accordingly as needed for development purpose
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       DEBUG: ${DEBUG}

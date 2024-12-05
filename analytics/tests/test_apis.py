@@ -90,6 +90,12 @@ class CampaignListAPITestCase(APITestCase):
 
 
 class PerformanceTimeSeriesAPITestCase(APITestCase):
+    """
+    expected_results is a list of
+    [total_cost, total_conversions, total_clicks, total_impressions, cost, conversions, clicks]
+    E.g. [[100, 1, 1, 1, 100, 1, 1],...]
+    """
+
     def setUp(self):
         super().setUp()
         self.campaign_1 = CampaignFactory()
@@ -530,6 +536,15 @@ class PerformanceTimeSeriesAPITestCase(APITestCase):
 
 
 class PerformanceComparisonAPITestCase(APITestCase):
+    """
+    expected_base_performance and expected_performance_comparisons are in the format:
+    [
+        total_cost, total_clicks, total_conversions, cost_per_conversion,
+        cost_per_click, cost_per_mile_impression, conversion_rate, click_through_rate
+    ]
+    e.g. [400, 4, 4, 100, 100, 100_000, 1, 1]
+    """
+
     def setUp(self):
         super().setUp()
         self.campaign_1 = CampaignFactory()
