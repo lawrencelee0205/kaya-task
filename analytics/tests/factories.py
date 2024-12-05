@@ -20,6 +20,7 @@ class CampaignFactory(factory.django.DjangoModelFactory):
 class AdGroupFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = AdGroup
+        django_get_or_create = ("name",)
 
     id = factory.Sequence(lambda n: n)
     name = fuzzy.FuzzyText(length=50)

@@ -27,6 +27,9 @@ class AdGroup(models.Model):
 
     class Meta:
         indexes = [BTreeIndex(fields=["id"], name="ad_group_id_unique")]
+        constraints = [
+            models.UniqueConstraint(fields=["name"], name="ad_group_name_unique")
+        ]
 
 
 class AdGroupStatsMetricMixin(models.Model):
