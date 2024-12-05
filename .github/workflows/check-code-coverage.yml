@@ -60,7 +60,7 @@ jobs:
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
-      
+
       - name: Stop and remove containers
         if: success() || failure()
         run: docker compose down

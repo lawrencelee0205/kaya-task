@@ -6,6 +6,8 @@ services:
       context: .
     image: kaya-django-app:latest
     command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - github_action.env
     volumes:
       - .:/code
     ports:
@@ -17,6 +19,8 @@ services:
     image: postgres:14-alpine
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
+    env_file:
+      - github_action.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
