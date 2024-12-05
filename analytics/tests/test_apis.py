@@ -40,7 +40,7 @@ class CampaignListAPITestCase(APITestCase):
             "id": target_campaign.id,
             "name": update_name,
         }
-        response = self.client.post(self.url, data, format="json")
+        response = self.client.patch(self.url, data, format="json")
         assert response.status_code == HTTP_200_OK
         assert response.data["name"] == update_name
 
@@ -55,7 +55,7 @@ class CampaignListAPITestCase(APITestCase):
             "id": target_campaign.id + 1,
             "name": update_name,
         }
-        response = self.client.post(self.url, data, format="json")
+        response = self.client.patch(self.url, data, format="json")
         assert response.status_code == HTTP_404_NOT_FOUND
 
         target_campaign.refresh_from_db()
@@ -82,10 +82,10 @@ class CampaignListAPITestCase(APITestCase):
             "name": update_name,
         }
         for _ in range(5):
-            response = self.client.post(self.url, data, format="json")
+            response = self.client.patch(self.url, data, format="json")
             assert response.status_code == HTTP_200_OK
 
-        response = self.client.post(self.url, data, format="json")
+        response = self.client.patch(self.url, data, format="json")
         assert response.status_code == HTTP_429_TOO_MANY_REQUESTS
 
 
