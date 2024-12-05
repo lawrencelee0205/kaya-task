@@ -9,14 +9,15 @@ on:
       - main
 
 env:
-  DB_USER: github_action_test
-  DB_PASSWORD: github_action_test
-  DB_NAME: github_action_test
-  DB_PORT: 5434
+  SECRET_KEY: github_action_test_secret_key
   DEBUG: "False"
-  SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
-  DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}"
+  POSTGRES_DB: github_action_test
+  POSTGRES_USER: github_action_test
+  POSTGRES_PASSWORD: github_action_test
+  DB_HOST: db
+  DB_PORT: 5432
+  DATABASE_URL: postgres://${POSTGRES_USER}:github_action_test@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
 
 jobs:
   test:
@@ -25,11 +26,11 @@ jobs:
       db:
         image: postgres:14-alpine
         env:
-          POSTGRES_USER: ${{ env.DB_USER }}
-          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
-          POSTGRES_DB: ${{ env.DB_NAME }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
         ports:
-          - 5433:5432
+          - 5432:5432
 
     steps:
       - name: Checkout code
