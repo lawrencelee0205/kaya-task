@@ -36,6 +36,15 @@ Always rebuild image when installing package with pipenv. The command should be 
     docker compose exec app python manage.py migrate
     ```
 
+# Script to create database tables
+Django use the migration files in analytics/migrations folder to create database table and etc.
+
+Optionally run `docker compose exec app python manage.py sqlmigrate analytics 0001` to geenrate the SQL
+```
+ docker compose exec app python manage.py sqlmigrate analytics 0001
+```
+
+
 # Create superuser
 1. Create superuser to access the local django admin panel
     ```
@@ -85,10 +94,34 @@ Always rebuild image when installing package with pipenv. The command should be 
     docker compose exec app pytest --reuse-db
     ```
 
+# Deployment to AWS
+1. Service required:
+   - AWS ECR
+   - AWS EC2
+   - AWS RDS
+   - AWS VPC
+   - AWS IAM
+   - AWS API GATEWAY
+   - AWS CloudWatch
+2. Install WSGI e.g. gunicorn for django project as web server is needed to run django project on production environment.
+3. Build image for production, excluding the dev category dependencies to make image size smaller.
+4. Push docker image to AWS ECR.
+5. Setup AWS VPC to networks and connect all resources required.
+6. Setup IAM role to provide server access to AWS ECR.
+7. Setup AWS RDS with the configuration and .env file provided.
+8. Setup AWS API GATEWAY to direct the request to AWS EC2.
+9. Continuously monitoring the performance of APIs using AWS CloudWatch.
+#### Additionally
+1. Use terraform to control the infrasructure and settings.
+2. Create a git branch named "production" which specifically push image and configure cloud service setting through github action e.g. when new commits merged into production branch.
+
+
 # Assumptions
 1. Impression, clicks, conversion, cost from AdGroupStats should be equal or greater than 0.
 2. Campaign name and type should be composite unique.
 3. AdGroup name should be unique.
+4. Date type input should only follow the format "YYYY-MM-DD".
+5. AdGroupStats table should be frequently read.
 
 # Additional features
 1. Only authenticated user can make request to the APIs.
@@ -96,4 +129,4 @@ Always rebuild image when installing package with pipenv. The command should be 
 3. New user need to register and obtain a token for requesting the APIs.
 
 # Summary
-Users or clients need to be authenticated through registration. Obtaining the token by signing in. A global request rate limit is implemented to all APIs. APIs' Input and query parameter is sanitized by the serializer default or custom validation. Message will be returned for successful or unsuccessful request.
+Users or clients need to be authenticated through registration. Obtaining the token by signing in. A global request rate limit is implemented to all APIs. APIs' Input and query parameter is sanitized by the serializer default or custom validation. Message will be returned for successful or unsuccessful request. Basic github action is used to check the code quality and run unit tests.
