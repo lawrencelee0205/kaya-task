@@ -1,4 +1,4 @@
-! /bin/bash
+#! /bin/bash
 echo "Freezing requirements..."
 pipenv requirements --dev > requirements.txt
 
