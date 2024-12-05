@@ -5,12 +5,12 @@
     SECRET_KEY='django-insecure-x^8d64%-ucm1ea@@y#6jno))2g=6$ry!2m%5vu*&9m%6ieg1%t'
     DEBUG=True
     ALLOWED_HOSTS=localhost,127.0.0.1
-    DB_NAME=postgres
-    DB_USER=postgres
-    DB_PASSWORD=
+    POSTGRES_DB=postgres
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=postgres
     DB_HOST=db
     DB_PORT=5432
-    DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    DATABASE_URL=postgres://${POSTGRES_USER}:postgres@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
     ```
 3. Install pipenv
     ```
@@ -31,6 +31,7 @@ Always rebuild image when installing package with pipenv. The command should be 
 3. ```docker compose up -d --build```
 
 # Database migration
+#### Note: Not necessary to run this if step 5 in Installation section is done.
 1. Run `docker compose exec app python manage.py migrate` to migrate the database
     ```
     docker compose exec app python manage.py migrate
