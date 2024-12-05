@@ -10,7 +10,7 @@ env:
   DB_USER: github_action_test
   DB_PASSWORD: github_action_test
   DB_NAME: github_action_test
-  DB_PORT: 5434
+  DB_PORT: 5435
   DEBUG: "False"
   SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
@@ -27,7 +27,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
           POSTGRES_DB: ${{ env.DB_NAME }}
         ports:
-          - 5433:5432
+          - 5434:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build image and run containers
         run: |
-          docker compose up --build -d
+          docker compose -f docker-compose-test.yml up --build -d
 
       - name: Wait for PostgreSQL to be ready
         run: |
