@@ -12,7 +12,7 @@ env:
   DB_USER: github_action_test
   DB_PASSWORD: github_action_test
   DB_NAME: github_action_test
-  DB_PORT: 5432
+  DB_PORT: 5433
   DEBUG: "False"
   SECRET_KEY: example
   ALLOWED_HOSTS: localhost,127.0.0.1
@@ -29,7 +29,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
           POSTGRES_DB: ${{ env.DB_NAME }}
         ports:
-          - 5432:5432
+          - 5433:5432
 
     steps:
       - name: Checkout code
