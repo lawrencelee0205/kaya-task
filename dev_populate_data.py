@@ -16,7 +16,7 @@ with open("campaign.csv", "r") as file:
         )
 
 campaigns = Campaign.objects.bulk_create(campaigns)
-print(f"{campaigns} campaigns added.")
+print(f"{len(campaigns)} campaigns added.")
 
 print("Populating AdGroups...")
 ad_groups = []
@@ -32,7 +32,7 @@ with open("ad_group.csv", "r") as file:
         )
 
 ad_groups = AdGroup.objects.bulk_create(ad_groups)
-print(f"{ad_groups} ad groups added.")
+print(f"{len(ad_groups)} ad groups added.")
 
 print("Populating AdGroupStats...")
 ad_group_stats = []
@@ -52,4 +52,4 @@ with open("ad_group_stats.csv", "r") as file:
         )
 
 ad_group_stats = AdGroupStats.objects.bulk_create(ad_group_stats)
-print(f"{ad_group_stats} ad group stats added.")
+print(f"{len(ad_group_stats)} ad group stats added.")
