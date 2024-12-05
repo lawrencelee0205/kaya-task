@@ -5,29 +5,22 @@ services:
     build:
       context: .
     image: kaya-django-app:latest
-    # Change the ip and port e.g. 127.0.0.1:8000 accordingly as needed for development purpose
-    # Should only be used in development environment
     command: python manage.py runserver 0.0.0.0:8000
-    env_file:
-      - github_action.env
     volumes:
       - .:/code
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
 
   db:
     image: postgres:14-alpine
-    env_file:
-      - github_action.env
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h localhost -p $DB_PORT"]
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
 
 volumes:
   postgres_data:
