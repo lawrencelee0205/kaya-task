@@ -1,5 +1,5 @@
 
-#### Note: Please install docker and pip package manager before starting the installation.
+#### Note: Please install docker, pip package manager and pre-commit https://pre-commit.com/#quick-start before starting the installation.
 
 # Installation
 1. Clone the repo to the local
